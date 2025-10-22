@@ -173,7 +173,7 @@ export class ApiService {
       
       if (params.city) {
         vendors = vendors.filter(v => 
-          v.location.city.toLowerCase().includes(params.city!.toLowerCase())
+          v.location.toLowerCase().includes(params.city!.toLowerCase())
         );
       }
       
@@ -296,3 +296,6 @@ export class ApiService {
     return response.data;
   }
 }
+
+// Export as default
+export default new ApiService();
