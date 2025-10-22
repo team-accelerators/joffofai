@@ -45,9 +45,10 @@ export default function App() {
       <ToastProvider>
         <AuthProvider>
           <UserManagementProvider>
-            <div className="min-h-screen flex flex-col">
+            <div className="min-h-screen flex flex-col bg-white">
+              <div className="p-4 text-black">Debug: App is rendering</div>
               <Navbar />
-              <main className="flex-1">
+              <main className="flex-1 bg-white">
                 <Routes>
                   <Route path="/" element={<Home />} />
                   <Route path="/recipe-generator" element={<Recipe />} />
@@ -61,14 +62,13 @@ export default function App() {
                   <Route
                     path="/create-recipe"
                     element={
-                      <AdminRoute>
+                      <ProtectedRoute>
                         <CreateRecipe />
-                      </AdminRoute>
+                      </ProtectedRoute>
                     }
                   />
                   <Route path="/ai-chat" element={<AIChatPage />} />
                   <Route path="/community" element={<Community />} />
-                  <Route path="/blog" element={<Blog />} />
                   <Route path="/blog" element={<Blog />} />
                   <Route
                     path="/api-documentation"

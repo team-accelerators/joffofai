@@ -24,10 +24,7 @@ export default function Navbar() {
   // Additional links (shown in More dropdown)
   const moreNavLinks = [
     { to: "/recipe-discovery", label: "Discover Recipes" },
-    // Only show Create Recipe for admin users
-    ...(user?.role === "admin"
-      ? [{ to: "/create-recipe", label: "Create Recipe" }]
-      : []),
+    { to: "/create-recipe", label: "Create Recipe" },
     { to: "/pantry", label: "Pantry" },
     { to: "/meal-planning", label: "Meal Plans" },
     { to: "/nutrition", label: "Nutrition" },
