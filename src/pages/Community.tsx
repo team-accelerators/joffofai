@@ -3,7 +3,7 @@ import { useAuth } from "../contexts/AuthContext";
 import Button from "../components/Button";
 import LoadingSpinner from "../components/LoadingSpinner";
 import { useToast } from "../components/Toast";
-import ApiService from "../services/apiService";
+import { ApiService } from "../services/apiService";
 
 interface Post {
   id: string;

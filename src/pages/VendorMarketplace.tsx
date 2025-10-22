@@ -1,10 +1,11 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import axios from "../config/api";
 import Button from "../components/Button";
 import LoadingSpinner from "../components/LoadingSpinner";
 import { useToast } from "../components/Toast";
 import VendorMap from "../components/VendorMap";
+import { ApiService } from "../services/apiService";
+import axios from "axios";
 
 // Leaflet imports
 import { LatLng } from "leaflet";
@@ -237,6 +238,76 @@ export default function VendorMarketplace() {
   const [watchLocationId, setWatchLocationId] = useState<number | null>(null);
   const [selectedVendorForDirections, setSelectedVendorForDirections] =
     useState<Vendor | null>(null);
+  // Fetch vendors
+  const fetchVendors = async () => {
+    try {
+      setLoading(true);
+      const params = userLocation
+        ? {
+            lat: userLocation.lat,
+            lng: userLocation.lng,
+            radius: locationFilters.radius,
+          }
+        : {};
+
+      // Prefer ApiService if available, otherwise fallback to axios
+      if (ApiService && typeof ApiService.getVendors === "function") {
+        const result = await ApiService.getVendors(params);
+        let fetchedVendors: Vendor[] = [];
+        if (Array.isArray(result)) {
+          fetchedVendors = result as Vendor[];
+        } else if (result && Array.isArray((result as any).data)) {
+          fetchedVendors = (result as any).data as Vendor[];
+        } else {
+          fetchedVendors = [];
+        }
+
+        // If user location exists, calculate distances
+        if (userLocation) {
+          const vendorsWithDistance = fetchedVendors.map((vendor: Vendor) => {
+            if (vendor.coordinates) {
+              const distance = calculateDistance(
+                userLocation.lat,
+                userLocation.lng,
+                vendor.coordinates.lat,
+                vendor.coordinates.lng
+              );
+              return { ...vendor, distance };
+            }
+            return vendor;
+          });
+          setVendors(vendorsWithDistance);
+        } else {
+          setVendors(fetchedVendors);
+        }
+      } else {
+        const response = await axios.get("/vendors", { params });
+        const fetchedVendors: Vendor[] = response.data || [];
+        if (userLocation) {
+          const vendorsWithDistance = fetchedVendors.map((vendor: Vendor) => {
+            if (vendor.coordinates) {
+              const distance = calculateDistance(
+                userLocation.lat,
+                userLocation.lng,
+                vendor.coordinates.lat,
+                vendor.coordinates.lng
+              );
+              return { ...vendor, distance };
+            }
+            return vendor;
+          });
+          setVendors(vendorsWithDistance);
+        } else {
+          setVendors(fetchedVendors);
+        }
+      }
+    } catch (error) {
+      console.error("Error fetching vendors:", error);
+      showToast("Failed to load vendors", "error");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   // Effects
   useEffect(() => {
@@ -297,19 +368,25 @@ export default function VendorMarketplace() {
     sortBy,
   ]);
 
+  // Update vendor distances when user location changes
   useEffect(() => {
     if (userLocation && vendors.length > 0) {
-      const vendorsWithDistance = vendors.map((vendor) => {
-        if (vendor.coordinates) {
-          const distance = calculateDistance(
-            userLocation.lat,
-            userLocation.lng,
-            vendor.coordinates.lat,
-            vendor.coordinates.lng
-          );
-          return { ...vendor, distance };
+      const vendorsWithDistance = vendors.map((v: Vendor) => {
+        if (v.coordinates) {
+          try {
+            const distance = calculateDistance(
+              userLocation.lat,
+              userLocation.lng,
+              v.coordinates.lat,
+              v.coordinates.lng
+            );
+            return { ...v, distance };
+          } catch (error) {
+            console.error("Error calculating distance:", error);
+            return v;
+          }
         }
-        return vendor;
+        return v;
       });
       setVendors(vendorsWithDistance);
     }
@@ -443,19 +520,9 @@ export default function VendorMarketplace() {
     }
   };
 
-  const fetchVendors = async () => {
-    try {
-      setLoading(true);
-      // TODO: Replace with actual API call
-      const response = await axios.get("/vendors");
-      setVendors(response.data);
-    } catch (error) {
-      console.error("Error fetching vendors:", error);
-      showToast("Failed to load vendors. Please try again.", "error");
-    } finally {
-      setLoading(false);
-    }
-  };
+  useEffect(() => {
+    fetchVendors();
+  }, []);
 
   // Render
   return (
