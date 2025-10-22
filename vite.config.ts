@@ -5,5 +5,11 @@ export default defineConfig({
   plugins: [react()],
   server: {
     port: 5173
+  },
+  assetsInclude: ['**/*.png'],
+  resolve: {
+    alias: {
+      './images/': '/public/images/'
+    }
   }
 })
